@@ -11,6 +11,7 @@
 #include "board/irq.h" // irq_disable
 #include "canboot.h" // get_bootup_code
 #include "command.h" // DECL_CONSTANT_STR
+#include "startup_pins.h"
 
 // Export MCU type
 DECL_CONSTANT_STR("MCU", CONFIG_MCU);
@@ -81,6 +82,8 @@ start_application(void)
 void __noreturn __visible
 reset_handler_stage_two(void)
 {
+    startup_pins_setup();
+
     uint64_t bootup_code = get_bootup_code();
     if (bootup_code == REQUEST_START_APP)
         start_application();

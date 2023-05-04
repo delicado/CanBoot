@@ -90,6 +90,17 @@ config INITIAL_PINS
         output high - preface a pin with a '!' character to set that
         pin to output low.
 
+# Support setting gpio state at startup
+config STARTUP_PINS
+    string "GPIO pins to set on bootloader entry and before main application startup"
+    depends on LOW_LEVEL_OPTIONS
+    help
+        One may specify a comma separated list of gpio pins to set
+        during bootloader entry (these gpio pins set before
+        main application is started). By default the pins will be set to
+        output high - preface a pin with a '!' character to set that
+        pin to output low.
+
 config ENABLE_DOUBLE_RESET
     bool "Support bootloader entry on rapid double click of reset button"
     default y

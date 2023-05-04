@@ -14,6 +14,7 @@ FILEHEADER = """
 #include "board/pgm.h"
 #include "compiler.h"
 #include "initial_pins.h"
+#include "startup_pins.h"
 """
 
 def error(msg):
@@ -192,6 +193,46 @@ const int initial_pins_size PROGMEM = ARRAY_SIZE(initial_pins);
         return fmt % (''.join(out),)
 
 Handlers.append(HandleInitialPins())
+
+######################################################################
+# Startup pins
+######################################################################
+
+class HandleStartupPins:
+    def __init__(self):
+        self.initial_pins = []
+        self.ctr_dispatch = { 'DECL_STARTUP_PINS': self.decl_initial_pins }
+    def decl_initial_pins(self, req):
+        pins = req.split(None, 1)[1].strip()
+        if pins.startswith('"') and pins.endswith('"'):
+            pins = pins[1:-1]
+        if pins:
+            self.initial_pins = [p.strip() for p in pins.split(',')]
+            HandlerConstants.decl_constant_str(
+                "_DECL_CONSTANT_STR STARTUP_PINS "
+                + ','.join(self.initial_pins))
+    def map_pins(self):
+        if not self.initial_pins:
+            return []
+        out = []
+        for p in self.initial_pins:
+            flag = "SP_OUT_HIGH"
+            if p.startswith('!'):
+                flag = "0"
+                p = p[1:].strip()
+            gpio = HandlerConstants.lookup_pin(p)
+            out.append("\n    {%d, %s}, // %s" % (gpio, flag, p))
+        return out
+    def generate_code(self, options):
+        out = self.map_pins()
+        fmt = """
+const struct startup_pin_s startup_pins[] PROGMEM = {%s
+};
+const int startup_pins_size PROGMEM = ARRAY_SIZE(startup_pins);
+"""
+        return fmt % (''.join(out),)
+
+Handlers.append(HandleStartupPins())
 
 
 ######################################################################
